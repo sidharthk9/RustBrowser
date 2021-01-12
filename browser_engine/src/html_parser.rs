@@ -1,7 +1,7 @@
-use crate::dom::{AttributeMap, ElementData, Node, NodeType};
-use std::fs::read;
 use std::iter::Peekable;
 use std::str::Chars;
+
+use crate::dom::{AttributeMap, ElementData, Node, NodeType};
 
 pub struct HtmlParser<'a> {
     chars: Peekable<Chars<'a>>,

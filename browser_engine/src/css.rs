@@ -1,6 +1,5 @@
 use std::default::Default;
 use std::fmt;
-use std::panic::resume_unwind;
 
 pub struct Color {
     pub(crate) red: f32,
