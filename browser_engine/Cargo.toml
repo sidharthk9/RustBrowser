@@ -6,7 +6,7 @@ edition = "2018"
 
 
 [dependencies]
-gfx = "0.18.0"
-gfx_text = "0.27.0"
-gfx_window_glutin = "0.31.0"
-glutin = "0.26.0"
+gfx = "0.14.0"
+gfx_text = "0.15.0"
+gfx_window_glutin = "0.14.0"
+glutin = "0.7.1"
