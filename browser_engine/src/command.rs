@@ -38,7 +38,7 @@ fn render_background(commands: &mut DisplayList, layout_box: &LayoutBox) {
 fn get_color(layout_box: &LayoutBox, name: &str) -> Option<Color> {
     match layout_box.styled_node.value(name) {
         Some(value) => match **value {
-            Value::Color(ref color) => return Some(**color.clone()),
+            Value::Color(ref color) => return Some(color.clone()),
             _ => return None,
         },
         None => return None,
@@ -88,7 +88,7 @@ fn render_borders(commands: &mut DisplayList, layout_box: &LayoutBox) {
         color,
         Rectangle {
             x: border_box.x,
-            y: border_box.y,
+            y: border_box.y + border_box.height - dimension.border.bottom,
             width: border_box.width,
             height: dimension.border.bottom,
         },

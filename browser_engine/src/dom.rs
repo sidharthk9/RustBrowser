@@ -23,13 +23,13 @@ pub struct Node {
 }
 
 impl fmt::Debug for ElementData {
-    fn fmt(&self, format: &mut fmt::Formatter) {
+    fn fmt(&self, format: &mut fmt::Formatter) -> fmt::Result {
         let mut attribute_string = String::new();
 
-        for (attribute, value) in self.attributes.into_iter() {
+        for (attribute, value) in self.attributes.iter() {
             attribute_string.push_str(&format!(" {0}=\"{1}\"", attribute, value));
         }
-        write!(format, "<{0},{1}>", self.tag_name, attribute_string);
+        write!(format, "<{0},{1}>", self.tag_name, attribute_string)
     }
 }
 
@@ -71,7 +71,7 @@ impl ElementData {
 
     pub fn get_classes(&self) -> HashSet<&str> {
         match self.attributes.get("class") {
-            Some(string) => string.split(" ").collect(),
+            Some(string) => string.split(' ').collect(),
             None => HashSet::new(),
         }
     }

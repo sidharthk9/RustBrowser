@@ -61,7 +61,7 @@ impl<'a> CssParser<'a> {
 
         let mut multiple_ids = false;
         while self.chars.peek().map_or(false, |char| {
-            (*char != ',' && *char != '{') && !(*char).is_whitespace()
+            *char != ',' && *char != '{' && !(*char).is_whitespace()
         }) {
             match self.chars.peek() {
                 Some(&char) if char == '#' => {
@@ -74,7 +74,7 @@ impl<'a> CssParser<'a> {
                         simple_selector.id = self.parse_id();
                     }
                 }
-                Some(&char) if c == '.' => {
+                Some(&char) if char == '.' => {
                     self.chars.next();
                     let class_name = self.parse_identifier();
 
@@ -82,7 +82,9 @@ impl<'a> CssParser<'a> {
                         simple_selector.classes.push(class_name);
                     }
                 }
-                _ => self.consume_while(|char| char != ',' && char != '{'),
+                _ => {
+                    self.consume_while(|char| char != ',' && char != '{');
+                }
             }
         }
 
@@ -157,7 +159,7 @@ impl<'a> CssParser<'a> {
                 self.chars.next();
             } else {
                 self.consume_while(char::is_whitespace);
-                if self.chars.peek().map_or(false, |c| *char == '}') {
+                if self.chars.peek().map_or(false, |char| *char == '}') {
                     declarations.push(new_declaration);
                 }
             }

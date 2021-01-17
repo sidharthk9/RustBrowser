@@ -13,7 +13,7 @@ pub struct LayoutBox<'a> {
 
 #[derive(Clone, Copy, Default)]
 pub struct Dimensions {
-    pub(crate) content: Rectangle,
+    pub content: Rectangle,
     padding: EdgeSizes,
     pub(crate) border: EdgeSizes,
     margin: EdgeSizes,
@@ -24,8 +24,8 @@ pub struct Dimensions {
 pub struct Rectangle {
     pub(crate) x: f32,
     pub(crate) y: f32,
-    pub(crate) width: f32,
-    pub(crate) height: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -36,6 +36,7 @@ pub struct EdgeSizes {
     pub(crate) bottom: f32,
 }
 
+#[derive(Clone)]
 pub enum BoxType {
     Block,
     Inline,
@@ -73,7 +74,7 @@ impl<'a> LayoutBox<'a> {
         let node = self.styled_node;
         let dimension = &mut self.dimensions;
 
-        dimension.content.height = get_absolute_nums(node, boundary_box, "width").unwrap_or(0.0);
+        dimension.content.height = get_absolute_num(node, boundary_box, "width").unwrap_or(0.0);
 
         dimension.margin.left = node.num_or("margin-left", 0.0);
         dimension.margin.right = node.num_or("margin-right", 0.0);
@@ -123,10 +124,10 @@ impl<'a> LayoutBox<'a> {
         let dimension = &mut self.dimensions;
 
         let width = get_absolute_num(node, boundary_box, "width").unwrap_or(0.0);
-        let margin_left = style.value("margin-left");
-        let margin_right = style.value("margin-right");
+        let margin_left = node.value("margin-left");
+        let margin_right = node.value("margin-right");
 
-        let margin_left_num = match margin_left {
+        let margin_left_num: f32 = match margin_left {
             Some(margin) => match **margin {
                 Value::Other(ref string) => string.parse().unwrap_or(0.0),
                 _ => 0.0,
@@ -134,7 +135,7 @@ impl<'a> LayoutBox<'a> {
             None => 0.0,
         };
 
-        let margin_right_num = match margin_right {
+        let margin_right_num: f32 = match margin_right {
             Some(margin) => match **margin {
                 Value::Other(ref string) => string.parse().unwrap_or(0.0),
                 _ => 0.0,
@@ -142,11 +143,11 @@ impl<'a> LayoutBox<'a> {
             None => 0.0,
         };
 
-        dimension.border.left = style.num_or("border-left-width", 0.0);
-        dimension.border.right = style.num_or("border-right-width", 0.0);
+        dimension.border.left = node.num_or("border-left-width", 0.0);
+        dimension.border.right = node.num_or("border-right-width", 0.0);
 
-        dimension.padding.left = style.num_or("padding-left", 0.0);
-        dimension.padding.right = style.num_or("padding-right", 0.0);
+        dimension.padding.left = node.num_or("padding-left", 0.0);
+        dimension.padding.right = node.num_or("padding-right", 0.0);
 
         let total_size = width
             + margin_left_num
@@ -158,7 +159,7 @@ impl<'a> LayoutBox<'a> {
 
         let underflow = boundary_box.content.width - total_size;
 
-        match (width, margin_left, margin_right_num) {
+        match (width, margin_left, margin_right) {
             (0.0, _, _) => {
                 if underflow >= 0.0 {
                     dimension.content.width = underflow;
@@ -344,7 +345,7 @@ impl fmt::Debug for BoxType {
             BoxType::Anonymous => "anonymous",
         };
 
-        write!(f, "{}", display_type)
+        write!(format, "{}", display_type)
     }
 }
 

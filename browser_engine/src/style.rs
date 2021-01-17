@@ -47,7 +47,7 @@ impl<'a> StyledNode<'a> {
             for selector in &rule.selectors {
                 if selector_matches(element, &selector) {
                     for declaration in &rule.declarations {
-                        styles.insert(&declaration.property, &declaration.value)
+                        styles.insert(&declaration.property, &declaration.value);
                     }
                     break;
                 }
@@ -62,8 +62,8 @@ impl<'a> StyledNode<'a> {
 
     pub fn get_display(&self) -> Display {
         match self.value("display") {
-            Some(string) => match **s {
-                Value::Other(ref value) => match v.as_ref() {
+            Some(string) => match **string {
+                Value::Other(ref value) => match value.as_ref() {
                     "block" => Display::Block,
                     "none" => Display::None,
                     "inline-block" => Display::InlineBlock,

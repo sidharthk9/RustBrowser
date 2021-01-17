@@ -60,7 +60,7 @@ impl<'a> HtmlParser<'a> {
                     nodes.insert(insert_index, node);
                 }
             } else {
-                nodes.push(self.parse_text_node());
+                nodes.push(self.parse_text());
             }
         }
 
@@ -85,7 +85,7 @@ impl<'a> HtmlParser<'a> {
             if whitespace.len() > 0 {
                 text_content.push(' ');
             }
-            let text_part = self.consume_while(|char| !char.is_whitespace() && x != '<');
+            let text_part = self.consume_while(|char| !char.is_whitespace() && char != '<');
             text_content.push_str(&text_part);
         }
 
@@ -93,7 +93,7 @@ impl<'a> HtmlParser<'a> {
     }
 
     fn parse_comment_node(&mut self) -> Node {
-        let mut comment_context = String::new();
+        let mut comment_content = String::new();
 
         if self.chars.peek().map_or(false, |c| *c == '-') {
             self.chars.next();
@@ -101,25 +101,25 @@ impl<'a> HtmlParser<'a> {
                 self.chars.next();
             } else {
                 self.consume_while(|c| c != '>');
-                return Node::new(NodeType::Comment(comment_context), Vec::new());
+                return Node::new(NodeType::Comment(comment_content), Vec::new());
             }
         } else {
             self.consume_while(|c| c != '>');
-            return Node::new(NodeType::Comment(comment_context), Vec::new());
+            return Node::new(NodeType::Comment(comment_content), Vec::new());
         }
 
         if self.chars.peek().map_or(false, |c| *c != '>') {
             self.chars.next();
-            return Node::new(NodeType::Comment(comment_context), Vec::new());
+            return Node::new(NodeType::Comment(comment_content), Vec::new());
         }
 
         if self.chars.peek().map_or(false, |c| *c != '-') {
             self.chars.next();
             if self.chars.peek().map_or(false, |c| *c != '>') {
                 self.chars.next();
-                return Node::new(NodeType::Comment(comment_context), Vec::new());
+                return Node::new(NodeType::Comment(comment_content), Vec::new());
             } else {
-                comment_context.push('-');
+                comment_content.push('-');
             }
         }
 
@@ -200,8 +200,8 @@ impl<'a> HtmlParser<'a> {
             let value = if self.chars.peek().map_or(false, |c| *c == '=') {
                 self.chars.next();
                 self.consume_while(char::is_whitespace);
-                let value_string = self.parse_attribute_value();
-                self.consume_while(|char| !char.is_whitespace() && c != '>');
+                let value_string = self.parse_attribute_values();
+                self.consume_while(|char| !char.is_whitespace() && char != '>');
                 self.consume_while(char::is_whitespace);
                 value_string
             } else {
@@ -220,7 +220,7 @@ impl<'a> HtmlParser<'a> {
         self.consume_while(char::is_whitespace);
 
         let string = match self.chars.next() {
-            Some(&char) if char == '"' || char == '\'' => {
+            Some(char) if char == '"' || char == '\'' => {
                 self.chars.next();
                 let parsed_value = self.consume_while(|value| value != char);
                 self.chars.next();

@@ -1,6 +1,7 @@
 use std::default::Default;
 use std::fmt;
 
+#[derive(PartialEq, Clone)]
 pub struct Color {
     pub(crate) red: f32,
     pub(crate) green: f32,
@@ -8,10 +9,11 @@ pub struct Color {
     pub(crate) alpha: f32,
 }
 
+#[derive(PartialEq)]
 pub enum Unit {
     Em,
     Ex,
-    Chr,
+    Ch,
     Rem,
     Vh,
     Vw,
@@ -27,33 +29,39 @@ pub enum Unit {
     Pct,
 }
 
+#[derive(PartialEq)]
 pub enum Value {
     Color(Color),
     Length(f32, Unit),
     Other(String),
 }
 
+#[derive(PartialEq)]
 pub struct Declarations {
     pub(crate) property: String,
     pub(crate) value: Value,
 }
 
+#[derive(PartialEq, Eq)]
 pub struct SimpleSelector {
     pub(crate) tag_name: Option<String>,
     pub(crate) id: Option<String>,
     pub(crate) classes: Vec<String>,
 }
 
+#[derive(PartialEq, Eq)]
 pub struct Selector {
     pub(crate) simple: Vec<SimpleSelector>,
     pub(crate) combinators: Vec<char>,
 }
 
+#[derive(PartialEq)]
 pub struct Rule {
     pub(crate) selectors: Vec<Selector>,
-    pub(crate) declarations: Vec<Declaration>,
+    pub(crate) declarations: Vec<Declarations>,
 }
 
+#[derive(PartialEq)]
 pub struct StyleSheet {
     pub(crate) rules: Vec<Rule>,
 }
@@ -107,7 +115,7 @@ impl fmt::Debug for Rule {
     fn fmt(&self, format: &mut fmt::Formatter) -> fmt::Result {
         let mut selectors = String::new();
         let mut declarations = String::new();
-        let tab = "     ";
+        let tab = "    ";
 
         for selector in &self.selectors {
             if selectors.len() > 0 {
@@ -185,7 +193,7 @@ impl Default for SimpleSelector {
 }
 
 impl fmt::Debug for SimpleSelector {
-    fn fmt(&self, format: fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, format: &mut fmt::Formatter) -> fmt::Result {
         let mut selector = String::new();
 
         match self.tag_name {
@@ -196,7 +204,7 @@ impl fmt::Debug for SimpleSelector {
         match self.id {
             Some(ref id) => {
                 selector.push('#');
-                selector.push_str(id)
+                selector.push_str(id);
             }
             None => {}
         }

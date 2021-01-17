@@ -37,7 +37,7 @@ struct RenderText<'a> {
 }
 
 //Placeholder function. DIY?
-fn render_texts(command_list: &[DisplayCommand]) -> Vec<RenderText> {
+fn render_texts(_command_list: &[DisplayCommand]) -> Vec<RenderText> {
     Vec::new()
 }
 
@@ -51,7 +51,7 @@ fn render_commands(command_list: &[DisplayCommand]) -> (Vec<Vertex>, Vec<u16>) {
             DisplayCommand::SolidRectangle(ref color, ref rectangle) => {
                 let color = [color.red, color.green, color.blue];
 
-                let mut vertex = render_rectangle(&c, rectangle);
+                let mut vertex = render_rectangle(&color, rectangle);
                 vertices.append(&mut vertex);
 
                 let index_base: u16 = rect_num * 4;
@@ -68,7 +68,7 @@ fn render_commands(command_list: &[DisplayCommand]) -> (Vec<Vertex>, Vec<u16>) {
             }
         }
     }
-    (vertices, index_data)
+    return (vertices, index_data);
 }
 
 fn render_rectangle(color: &[f32; 3], rectangle: &layout::Rectangle) -> Vec<Vertex> {
@@ -77,19 +77,19 @@ fn render_rectangle(color: &[f32; 3], rectangle: &layout::Rectangle) -> Vec<Vert
     let vertices = vec![
         Vertex {
             pos: [x + width, y],
-            color: *c,
+            color: *color,
         },
         Vertex {
             pos: [x, y],
-            color: *c,
+            color: *color,
         },
         Vertex {
             pos: [x, y + height],
-            color: *c,
+            color: *color,
         },
         Vertex {
             pos: [x + width, y + height],
-            color: *c,
+            color: *color,
         },
     ];
 
@@ -107,7 +107,7 @@ fn transform_rectangle(rectangle: &layout::Rectangle) -> (f32, f32, f32, f32) {
 
 pub fn render_loop(command_list: &[DisplayCommand]) {
     let builder = glutin::WindowBuilder::new()
-        .with_title(String::from("Browser"))
+        .with_title(String::from("Toy Browser"))
         .with_dimensions(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32)
         .with_vsync();
 
