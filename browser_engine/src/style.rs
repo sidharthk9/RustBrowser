@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+﻿use std::collections::HashMap;
 use std::{fmt, str};
 
 use crate::css::{Selector, StyleSheet, Value};
@@ -9,7 +9,7 @@ type PropertyMap<'a> = HashMap<&'a str, &'a Value>;
 pub struct StyledNode<'a> {
     node: &'a Node,
     styles: PropertyMap<'a>,
-    pub(crate) children: Vec<StyledNode<'a>>,
+    pub children: Vec<StyledNode<'a>>,
 }
 
 pub enum Display {
@@ -33,7 +33,7 @@ impl<'a> StyledNode<'a> {
         StyledNode {
             node,
             styles: match node.node_type {
-                NodeType::Element(ref element) => StyledNode::get_styles(element, stylesheet),
+                NodeType::Element(ref e) => StyledNode::get_styles(e, stylesheet),
                 _ => PropertyMap::new(),
             },
             children: style_children,
@@ -46,8 +46,8 @@ impl<'a> StyledNode<'a> {
         for rule in &stylesheet.rules {
             for selector in &rule.selectors {
                 if selector_matches(element, &selector) {
-                    for declaration in &rule.declarations {
-                        styles.insert(&declaration.property, &declaration.value);
+                    for declar in &rule.declarations {
+                        styles.insert(&declar.property, &declar.value);
                     }
                     break;
                 }
@@ -62,8 +62,8 @@ impl<'a> StyledNode<'a> {
 
     pub fn get_display(&self) -> Display {
         match self.value("display") {
-            Some(string) => match **string {
-                Value::Other(ref value) => match value.as_ref() {
+            Some(s) => match **s {
+                Value::Other(ref v) => match v.as_ref() {
                     "block" => Display::Block,
                     "none" => Display::None,
                     "inline-block" => Display::InlineBlock,
@@ -77,8 +77,8 @@ impl<'a> StyledNode<'a> {
 
     pub fn num_or(&self, name: &str, default: f32) -> f32 {
         match self.value(name) {
-            Some(value) => match **value {
-                Value::Length(len, _) => len,
+            Some(v) => match **v {
+                Value::Length(n, _) => n,
                 _ => default,
             },
             None => default,
@@ -87,8 +87,8 @@ impl<'a> StyledNode<'a> {
 }
 
 impl<'a> fmt::Debug for StyledNode<'a> {
-    fn fmt(&self, format: &mut fmt::Formatter) -> fmt::Result {
-        write!(format, "{0:?}: {1:?}", self.node, self.styles)
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}: {:?}", self.node, self.styles)
     }
 }
 
@@ -97,8 +97,8 @@ fn selector_matches(element: &ElementData, selector: &Selector) -> bool {
         let mut selector_match = true;
 
         match simple.tag_name {
-            Some(ref tag) => {
-                if *tag != element.tag_name {
+            Some(ref t) => {
+                if *t != element.tag_name {
                     continue;
                 }
             }
@@ -106,9 +106,9 @@ fn selector_matches(element: &ElementData, selector: &Selector) -> bool {
         };
 
         match element.get_id() {
-            Some(element_id) => match simple.id {
-                Some(ref selector_id) => {
-                    if *element_id != *selector_id {
+            Some(i) => match simple.id {
+                Some(ref id) => {
+                    if *i != *id {
                         continue;
                     }
                 }
@@ -121,8 +121,8 @@ fn selector_matches(element: &ElementData, selector: &Selector) -> bool {
                 _ => {}
             },
         }
-
         let element_classes = element.get_classes();
+
         for class in &simple.classes {
             selector_match &= element_classes.contains::<str>(class);
         }
@@ -131,13 +131,12 @@ fn selector_matches(element: &ElementData, selector: &Selector) -> bool {
             return true;
         }
     }
-
     false
 }
 
 pub fn pretty_print(node: &StyledNode, indent_size: usize) {
     let indent = (0..indent_size).map(|_| " ").collect::<String>();
-    println!("{0}{1:?}", indent, node);
+    println!("{}{:?}", indent, node);
 
     for child in node.children.iter() {
         pretty_print(&child, indent_size + 2);

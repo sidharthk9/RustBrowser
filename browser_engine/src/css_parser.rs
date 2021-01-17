@@ -1,7 +1,7 @@
+use crate::css::{Color, Declarations, Rule, Selector, SimpleSelector, StyleSheet, Unit, Value};
+
 use std::iter::Peekable;
 use std::str::Chars;
-
-use crate::css::{Color, Declarations, Rule, Selector, SimpleSelector, StyleSheet, Unit, Value};
 
 pub struct CssParser<'a> {
     chars: Peekable<Chars<'a>>,
@@ -49,71 +49,73 @@ impl<'a> CssParser<'a> {
     }
 
     fn parse_selector(&mut self) -> Selector {
-        let mut simple_selector = SimpleSelector::default();
+        let mut sselector = SimpleSelector::default();
         let mut selector = Selector::default();
 
         self.consume_while(char::is_whitespace);
 
-        simple_selector.tag_name = match self.chars.peek() {
-            Some(&char) if is_valid_start_identifier(char) => Some(self.parse_identifier()),
+        sselector.tag_name = match self.chars.peek() {
+            Some(&c) if is_valid_start_ident(c) => Some(self.parse_identifier()),
             _ => None,
         };
 
         let mut multiple_ids = false;
-        while self.chars.peek().map_or(false, |char| {
-            *char != ',' && *char != '{' && !(*char).is_whitespace()
-        }) {
+        while self
+            .chars
+            .peek()
+            .map_or(false, |c| *c != ',' && *c != '{' && !(*c).is_whitespace())
+        {
             match self.chars.peek() {
-                Some(&char) if char == '#' => {
+                Some(&c) if c == '#' => {
                     self.chars.next();
-                    if simple_selector.id.is_some() || multiple_ids {
-                        simple_selector.id = None;
+                    if sselector.id.is_some() || multiple_ids {
+                        sselector.id = None;
                         multiple_ids = true;
                         self.parse_id();
                     } else {
-                        simple_selector.id = self.parse_id();
+                        sselector.id = self.parse_id();
                     }
                 }
-                Some(&char) if char == '.' => {
+                Some(&c) if c == '.' => {
                     self.chars.next();
                     let class_name = self.parse_identifier();
 
                     if class_name != String::from("") {
-                        simple_selector.classes.push(class_name);
+                        sselector.classes.push(class_name);
                     }
                 }
                 _ => {
-                    self.consume_while(|char| char != ',' && char != '{');
+                    self.consume_while(|c| c != ',' && c != '{');
                 }
             }
         }
 
-        if simple_selector != SimpleSelector::default() {
-            selector.simple.push(simple_selector);
+        if sselector != SimpleSelector::default() {
+            selector.simple.push(sselector);
         }
 
         selector
     }
 
     fn parse_identifier(&mut self) -> String {
-        let mut identifier = String::new();
+        let mut ident = String::new();
 
         match self.chars.peek() {
-            Some(&char) => {
-                if is_valid_start_identifier(char) {
-                    identifier.push_str(&self.consume_while(is_valid_identifier))
+            Some(&c) => {
+                if is_valid_start_ident(c) {
+                    ident.push_str(&self.consume_while(is_valid_ident))
                 }
             }
             None => {}
         }
 
-        identifier.to_lowercase()
+        ident.to_lowercase()
     }
 
     fn parse_id(&mut self) -> Option<String> {
         match &self.parse_identifier()[..] {
             "" => None,
-            string @ _ => Some(string.to_string()),
+            s @ _ => Some(s.to_string()),
         }
     }
 
@@ -127,6 +129,7 @@ impl<'a> CssParser<'a> {
 
             self.chars.next();
             self.consume_while(char::is_whitespace);
+
             let value = self
                 .consume_while(|x| x != ';' && x != '\n' && x != '}')
                 .to_lowercase();
@@ -152,15 +155,15 @@ impl<'a> CssParser<'a> {
                 _ => Value::Other(value),
             };
 
-            let new_declaration = Declarations::new(property, value_enum);
+            let declaration = Declarations::new(property, value_enum);
 
-            if self.chars.peek().map_or(false, |char| *char == ';') {
-                declarations.push(new_declaration);
+            if self.chars.peek().map_or(false, |c| *c == ';') {
+                declarations.push(declaration);
                 self.chars.next();
             } else {
                 self.consume_while(char::is_whitespace);
-                if self.chars.peek().map_or(false, |char| *char == '}') {
-                    declarations.push(new_declaration);
+                if self.chars.peek().map_or(false, |c| *c == '}') {
+                    declarations.push(declaration);
                 }
             }
             self.consume_while(char::is_whitespace);
@@ -184,20 +187,20 @@ impl<'a> CssParser<'a> {
 }
 
 fn translate_length(value: &str) -> Value {
-    let mut num_string = String::new();
+    let mut num_str = String::new();
     let mut unit = String::new();
-    let mut parsing_state = true;
+    let mut parsing_num = true;
 
-    for char in value.chars() {
-        if char.is_numeric() && parsing_state {
-            num_string.push(char);
+    for c in value.chars() {
+        if c.is_numeric() && parsing_num {
+            num_str.push(c);
         } else {
-            unit.push(char);
-            parsing_state = false;
+            unit.push(c);
+            parsing_num = false;
         }
     }
 
-    let number = num_string.parse().unwrap_or(0.0);
+    let number = num_str.parse().unwrap_or(0.0);
 
     match unit.as_ref() {
         "em" => Value::Length(number, Unit::Em),
@@ -755,26 +758,26 @@ fn translate_color(color: &str) -> Color {
     }
 }
 
-fn is_lower_case(char: char) -> bool {
-    char >= 'a' && char <= 'z'
+fn is_valid_ident(c: char) -> bool {
+    is_valid_start_ident(c) || c.is_digit(10) || c == '-'
 }
 
-fn is_upper_case(char: char) -> bool {
-    char >= 'A' && char <= 'Z'
+fn is_valid_start_ident(c: char) -> bool {
+    is_letter(c) || is_non_ascii(c) || c == '_'
 }
 
-fn is_letter(char: char) -> bool {
-    is_upper_case(char) || is_lower_case(char)
+fn is_letter(c: char) -> bool {
+    is_upper_letter(c) || is_lower_letter(c)
 }
 
-fn is_non_ascii(char: char) -> bool {
-    char >= '\u{0080}'
+fn is_upper_letter(c: char) -> bool {
+    c >= 'A' && c <= 'Z'
 }
 
-fn is_valid_start_identifier(char: char) -> bool {
-    is_letter(char) || is_non_ascii(char) || char == '_'
+fn is_lower_letter(c: char) -> bool {
+    c >= 'a' && c <= 'z'
 }
 
-fn is_valid_identifier(char: char) -> bool {
-    is_valid_start_identifier(char) || char.is_digit(10) || char == '-'
+fn is_non_ascii(c: char) -> bool {
+    c >= '\u{0080}'
 }
